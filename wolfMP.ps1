@@ -1,7 +1,7 @@
 # Define variables
 $webAddress = "https://maps.oksii.eu/rtcwpro/"
 $tempFolder = "temp"
-$executableName = "wolfMP.exe"
+$executableNamePrefix = "wolfMP"
 $subdirectoryName = "rtcwpro"
 
 # Use current working directory as local folder
@@ -9,31 +9,32 @@ $localFolder = Get-Location
 
 # Construct full paths
 $tempPath = Join-Path -Path $localFolder -ChildPath $tempFolder
-$executablePath = Join-Path -Path $localFolder -ChildPath $executableName
+$executablePath = Join-Path -Path $localFolder -ChildPath "$executableNamePrefix.exe"
 $subdirectoryPath = Join-Path -Path $localFolder -ChildPath $subdirectoryName
 
 # Download the web index
 $webIndex = Invoke-WebRequest -Uri $webAddress
 
 # Extract version from the file name on the web index
-$matches = [regex]::Matches($webIndex.Content, 'rtcwpro_(\d+)_client.zip')
-if ($matches.Count -eq 0) {
+$versionMatches = [regex]::Matches($webIndex.Content, 'rtcwpro_(\d+)_client.zip')
+if ($versionMatches.Count -eq 0) {
     Write-Host "Error: No matching file found on the web index."
     exit
 }
 
-$webVersion = $matches[0].Groups[1].Value
+$webVersion = $versionMatches[0].Groups[1].Value
 
 # Check if local version matches
-if (Test-Path $executablePath -PathType Leaf) {
-    $localVersion = [regex]::Match($executablePath, 'wolfMP_(\d+).exe').Groups[1].Value
-
-    if ($localVersion -eq $webVersion) {
-        Write-Host "Local version is up to date. Launching $executablePath"
-        Start-Process $executablePath -ArgumentList "+set fs_game rtcwpro"
-        exit
-    }
+$localVersions = Get-ChildItem -Path $localFolder -Filter "wolfMP_*.exe" | ForEach-Object {
+    [regex]::Match($_.Name, 'wolfMP_(\d+).exe').Groups[1].Value
 }
+
+if ($localVersions -contains $webVersion) {
+    Write-Host "Local version is up to date. Launching wolfMP_$webVersion.exe"
+    Start-Process "$localFolder\wolfMP_$webVersion.exe" -ArgumentList "+set fs_game rtcwpro"
+    exit
+}
+
 
 # Create the temp folder
 New-Item -ItemType Directory -Path $tempPath -Force | Out-Null
@@ -55,14 +56,19 @@ Invoke-WebRequest -Uri $executableUrl -OutFile $archiveTempPath
 Expand-Archive -Path $archiveTempPath -DestinationPath $tempPath -Force
 
 # Rename "wolfMP.exe" to "wolfMP_<version>.exe"
-$downloadedExecutablePath = Join-Path -Path $tempPath -ChildPath "wolfMP.exe"
+$downloadedExecutablePath = Join-Path -Path $tempPath -ChildPath "$executableNamePrefix.exe"
 if (Test-Path $downloadedExecutablePath -PathType Leaf) {
-    $newExecutableName = "wolfMP_$webVersion.exe"
-    Rename-Item -Path $downloadedExecutablePath -NewName $newExecutableName -Force
-}
+    $newExecutableName = "$executableNamePrefix_$webVersion.exe"
+    $newExecutablePath = Join-Path -Path $tempPath -ChildPath $newExecutableName
+    
+    # Check if the downloaded executable has the expected versioned naming convention
+    if ((Get-Item $downloadedExecutablePath).Name -eq "$executableNamePrefix.exe") {
+        Rename-Item -Path $downloadedExecutablePath -NewName $newExecutableName -Force
 
-# Move files to the root folder
-Get-ChildItem -Path $tempPath | Move-Item -Destination $localFolder -Force
+        # Move files to the root folder
+        Move-Item -Path $newExecutablePath -Destination $localFolder -Force
+    }
+}
 
 # Remove temp folder
 Remove-Item -Path $tempPath -Recurse -Force
