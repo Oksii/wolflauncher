@@ -1,7 +1,7 @@
 # Define variables
 $webAddress = "https://maps.oksii.eu/rtcwpro/"
 $tempFolder = "temp"
-$executableNamePrefix = "wolfMP"
+$executableName = "wolfMP.exe"
 $subdirectoryName = "rtcwpro"
 
 # Use current working directory as local folder
@@ -9,7 +9,7 @@ $localFolder = Get-Location
 
 # Construct full paths
 $tempPath = Join-Path -Path $localFolder -ChildPath $tempFolder
-$executablePath = Join-Path -Path $localFolder -ChildPath "$executableNamePrefix.exe"
+$executablePath = Join-Path -Path $localFolder -ChildPath $executableName
 $subdirectoryPath = Join-Path -Path $localFolder -ChildPath $subdirectoryName
 
 # Download the web index
@@ -35,7 +35,6 @@ if ($localVersions -contains $webVersion) {
     exit
 }
 
-
 # Create the temp folder
 New-Item -ItemType Directory -Path $tempPath -Force | Out-Null
 
@@ -56,22 +55,20 @@ Invoke-WebRequest -Uri $executableUrl -OutFile $archiveTempPath
 Expand-Archive -Path $archiveTempPath -DestinationPath $tempPath -Force
 
 # Rename "wolfMP.exe" to "wolfMP_<version>.exe"
-$downloadedExecutablePath = Join-Path -Path $tempPath -ChildPath "$executableNamePrefix.exe"
+$downloadedExecutablePath = Join-Path -Path $tempPath -ChildPath "wolfMP.exe"
 if (Test-Path $downloadedExecutablePath -PathType Leaf) {
-    $newExecutableName = "$executableNamePrefix_$webVersion.exe"
-    $newExecutablePath = Join-Path -Path $tempPath -ChildPath $newExecutableName
-    
-    # Check if the downloaded executable has the expected versioned naming convention
-    if ((Get-Item $downloadedExecutablePath).Name -eq "$executableNamePrefix.exe") {
-        Rename-Item -Path $downloadedExecutablePath -NewName $newExecutableName -Force
-
-        # Move files to the root folder
-        Move-Item -Path $newExecutablePath -Destination $localFolder -Force
-    }
+    $newExecutableName = "wolfMP_$webVersion.exe"
+    Rename-Item -Path $downloadedExecutablePath -NewName $newExecutableName -Force
 }
+
+# Move files to the root folder
+Get-ChildItem -Path $tempPath | Move-Item -Destination $localFolder -Force
 
 # Remove temp folder
 Remove-Item -Path $tempPath -Recurse -Force
+
+# Clean up: Delete the downloaded .zip archive
+Remove-Item -Path "$localFolder\rtcwpro_$($webVersion)_client.zip" -Force
 
 # Clean up: Delete any .exe files that do not match "wolfMP_<version>.exe" (excluding <version> MINUS 1)
 Get-ChildItem -Path $localFolder -Filter "wolfMP_*.exe" | ForEach-Object {
