@@ -73,9 +73,6 @@ if (Test-Path $downloadedExecutablePath -PathType Leaf) {
 # Remove temp folder
 Remove-Item -Path $tempPath -Recurse -Force
 
-# Clean up: Delete the downloaded .zip archive
-Remove-Item -Path "$localFolder\rtcwpro_$($webVersion)_client.zip" -Force
-
 # Clean up: Delete any .exe files that do not match "wolfMP_<version>.exe" (excluding <version> MINUS 1)
 Get-ChildItem -Path $localFolder -Filter "wolfMP_*.exe" | ForEach-Object {
     $currentVersion = [regex]::Match($_.Name, 'wolfMP_(\d+).exe').Groups[1].Value
