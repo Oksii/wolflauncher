@@ -5,19 +5,18 @@ $releaseApiUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases/lat
 $executableNamePrefix = "wolfMP"
 $tempFolder = "temp"
 
-# Define subdirectories
+# Define directories
 $rtcwproSubPath = "rtcwpro"
 $mainSubPath = "Main"
-
-# Use the current working directory as the local folder
 $localFolder = Get-Location
 
-# Define the format for the backup date
+# Define format for the backup date
 $backupDateFormat = "yyyy-MM-dd"
 $backupDate = Get-Date -Format $backupDateFormat
 
-# Define the maps URL
-$websiteUrl = "https://maps.oksii.eu/"
+# Define URLs
+$gitHubPk3Url = "https://raw.githubusercontent.com/Oksii/autoexec_timer/main/README.md"
+$pk3DownloadUrlBase = "http://rtcw.life/files/mapdb/"
 
 # Fetch the release information
 $releaseInfo = Invoke-RestMethod -Uri $releaseApiUrl
@@ -28,13 +27,16 @@ $asset = $releaseInfo.assets | Where-Object { $_.name -match 'rtcwpro_(\d+)_clie
 if ($asset) {
     $assetVersion = $matches[1]
 
-    # Construct the local executable path
+    # Construct paths
     $localExecutablePath = Join-Path -Path $localFolder -ChildPath "$executableNamePrefix_$assetVersion.exe"
-
-    # Construct the subdirectories
     $rtcwproFullPath = Join-Path -Path $localFolder -ChildPath $rtcwproSubPath
     $mainFullPath = Join-Path -Path $localFolder -ChildPath $mainSubPath
-    
+    $rtcwproBackupFileName = "backup_${assetVersion}_${backupDate}.cfg"
+    $mainBackupFileName = "backup_${assetVersion}_${backupDate}.cfg"
+    $rtcwproBackupPath = Join-Path -Path $rtcwproFullPath -ChildPath $rtcwproBackupFileName
+    $mainBackupPath = Join-Path -Path $mainFullPath -ChildPath $mainBackupFileName
+    $tempPath = Join-Path -Path $localFolder -ChildPath $tempFolder
+
     # Check if local version matches
     $localVersions = Get-ChildItem -Path $localFolder -Filter "wolfMP_*.exe" | ForEach-Object {
         [regex]::Match($_.Name, 'wolfMP_(\d+).exe').Groups[1].Value
@@ -45,20 +47,12 @@ if ($asset) {
         Start-Process "$localFolder\wolfMP_$assetVersion.exe" -ArgumentList "+set fs_game rtcwpro"
         exit
     }
-    
-    # Construct the backup paths
-    $rtcwproBackupFileName = "backup_${assetVersion}_${backupDate}.cfg"
-    $mainBackupFileName = "backup_${assetVersion}_${backupDate}.cfg"
-    
-    $rtcwproBackupPath = Join-Path -Path $rtcwproFullPath -ChildPath $rtcwproBackupFileName
-    $mainBackupPath = Join-Path -Path $mainFullPath -ChildPath $mainBackupFileName
-    
-    # Directly specify the paths without using Join-Path
+
+    # Backup configuration files
     Copy-Item -Path "$rtcwproFullPath\wolfconfig_mp.cfg" -Destination "$rtcwproBackupPath" -Force
     Copy-Item -Path "$mainFullPath\wolfconfig_mp.cfg" -Destination "$mainBackupPath" -Force
-    
-    # Create the temp folder
-    $tempPath = Join-Path -Path $localFolder -ChildPath $tempFolder
+
+    # Create temp folder
     New-Item -ItemType Directory -Path $tempPath -Force | Out-Null
 
     # Download the asset
@@ -66,57 +60,57 @@ if ($asset) {
     Write-Host "Downloading $asset.name..."
     Invoke-WebRequest -Uri $downloadUrl -OutFile (Join-Path -Path $tempPath -ChildPath $asset.name)
 
-    # Extract the contents of the downloaded archive
+    # Extract contents of the downloaded archive
     Expand-Archive -Path (Join-Path -Path $tempPath -ChildPath $asset.name) -DestinationPath $tempPath -Force
-	
-    # Download and parse the list of .pk3 files from the website
-    function Get-WebsitePk3List {
-        $webpageContent = Invoke-WebRequest -Uri $websiteUrl
-        $pk3Files = $webpageContent.AllElements | Where-Object { $_.TagName -eq "a" -and $_.href -like "*.pk3" } | ForEach-Object {
-            [System.IO.Path]::GetFileName($_.href)
+
+    # Use Get-GitHubPk3ListFromReadme only when updating the asset
+    function Get-GitHubPk3ListFromReadme {
+        param (
+            [string]$ReadmeUrl
+        )
+
+        try {
+            $readmeContent = Invoke-RestMethod -Uri $ReadmeUrl -TimeoutSec 5
+        } catch {
+            Write-Host "Error: Unable to connect to the GitHub README. Make sure you have an internet connection."
+            return @()  # Return an empty array to indicate no files were retrieved
         }
 
-        return $pk3Files
+        $supportedMapsIndex = $readmeContent.IndexOf("### Supported custom maps")
+        if ($supportedMapsIndex -ge 0) {
+            $pk3Section = $readmeContent.Substring($supportedMapsIndex)
+            $pk3Files = $pk3Section -split "`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" -and $_ -match '\.pk3$' }
+            return $pk3Files
+        } else {
+            Write-Host "Error: Unable to find the '### Supported custom maps' section in the Readme."
+            return @()
+        }
     }
 
-    # Check if local version matches
-    $localVersions = Get-ChildItem -Path $localFolder -Filter "wolfMP_*.exe" | ForEach-Object {
-        [regex]::Match($_.Name, 'wolfMP_(\d+).exe').Groups[1].Value
-    }
+    # Download and parse list of .pk3 files from GitHub README.md
+    $gitHubPk3List = Get-GitHubPk3ListFromReadme -ReadmeUrl $gitHubPk3Url
 
-    if ($localVersions -contains $assetVersion) {
-        Write-Host "Local version is up to date. Launching wolfMP_$assetVersion.exe"
-        Start-Process "$localFolder\wolfMP_$assetVersion.exe" -ArgumentList "+set fs_game rtcwpro"
-        exit
-    }
-
-    # Download and parse the list of .pk3 files from the website
-    $websitePk3List = Get-WebsitePk3List
-
-    # Compare with the list of .pk3 files in the Main directory
+    # Compare with .pk3 files in the Main directory
     $mainPk3Path = Join-Path -Path $localFolder -ChildPath $mainSubPath
-    $missingPk3Files = $websitePk3List | Where-Object { -not (Test-Path (Join-Path -Path $mainPk3Path -ChildPath $_)) }
-    
+    $missingPk3Files = $gitHubPk3List | Where-Object { -not (Test-Path (Join-Path -Path $mainPk3Path -ChildPath $_)) }
+
     # Download missing .pk3 files and move them to the Main directory
     if ($missingPk3Files.Count -gt 0) {
         Write-Host "Downloading and moving missing .pk3 files to Main directory..."
         foreach ($missingPk3File in $missingPk3Files) {
-            $pk3DownloadUrl = "$websiteUrl$missingPk3File"
+            $pk3DownloadUrl = "$pk3DownloadUrlBase$missingPk3File"
             $pk3DownloadPath = Join-Path -Path $mainPk3Path -ChildPath $missingPk3File
-    
-            if (-not (Test-Path $pk3DownloadPath)) {
-                Invoke-WebRequest -Uri $pk3DownloadUrl -OutFile $pk3DownloadPath
+
+            try {
+                Invoke-WebRequest -Uri $pk3DownloadUrl -OutFile $pk3DownloadPath -ErrorAction Stop
+                Write-Host ("Downloaded: {0}" -f $missingPk3File)
+            } catch {
+                $errorMessage = $_.Exception.Message
+                Write-Host ("Error downloading {0}: {1}" -f $pk3DownloadUrl, $errorMessage -replace ':', '_')
             }
         }
     }
-
-    # Delete rtcwpro_*.pk3 files if updating wolfMP_<version>.exe
-    if (Test-Path $rtcwproFullPath -PathType Container) {
-        Write-Host "Deleting rtcwpro_*.pk3 files from $rtcwproFullPath..."
-        Get-ChildItem -Path $rtcwproFullPath -Filter "rtcwpro_*.pk3" | Remove-Item -Force
-    }
-    
-    
+	
     # Rename "wolfMP.exe" to "wolfMP_<version>.exe"
     $downloadedExecutablePath = Join-Path -Path $tempPath -ChildPath "wolfMP.exe"
     if (Test-Path $downloadedExecutablePath -PathType Leaf) {
