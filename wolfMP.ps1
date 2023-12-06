@@ -5,7 +5,9 @@ $releaseApiUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases/lat
 $executableNamePrefix = "wolfMP"
 $tempFolder = "temp"
 
-# Use the current working directory as the local folder
+# Define directories
+$rtcwproSubPath = "rtcwpro"
+$mainSubPath = "Main"
 $localFolder = Get-Location
 
 # Fetch the release information
@@ -17,8 +19,10 @@ $asset = $releaseInfo.assets | Where-Object { $_.name -match 'rtcwpro_(\d+)_clie
 if ($asset) {
     $assetVersion = $matches[1]
 
-    # Construct the local executable path
+    # Construct paths
     $localExecutablePath = Join-Path -Path $localFolder -ChildPath "$executableNamePrefix_$assetVersion.exe"
+    $rtcwproFullPath = Join-Path -Path $localFolder -ChildPath $rtcwproSubPath
+    $tempPath = Join-Path -Path $localFolder -ChildPath $tempFolder
 
     # Check if local version matches
     $localVersions = Get-ChildItem -Path $localFolder -Filter "wolfMP_*.exe" | ForEach-Object {
@@ -31,9 +35,7 @@ if ($asset) {
         exit
     }
 
-
-    # Create the temp folder
-    $tempPath = Join-Path -Path $localFolder -ChildPath $tempFolder
+    # Create temp folder
     New-Item -ItemType Directory -Path $tempPath -Force | Out-Null
 
     # Download the asset
@@ -41,15 +43,9 @@ if ($asset) {
     Write-Host "Downloading $asset.name..."
     Invoke-WebRequest -Uri $downloadUrl -OutFile (Join-Path -Path $tempPath -ChildPath $asset.name)
 
-    # Extract the contents of the downloaded archive
+    # Extract contents of the downloaded archive
     Expand-Archive -Path (Join-Path -Path $tempPath -ChildPath $asset.name) -DestinationPath $tempPath -Force
 
-    # Delete rtcwpro_*.pk3 files if updating wolfMP_<version>.exe
-    $rtcwproPath = Join-Path -Path $localFolder -ChildPath "rtcwpro"
-    if (Test-Path $rtcwproPath -PathType Container) {
-        Write-Host "Deleting rtcwpro_*.pk3 files from $rtcwproPath..."
-        Get-ChildItem -Path $rtcwproPath -Filter "rtcwpro_*.pk3" | Remove-Item -Force
-    }
 
     # Rename "wolfMP.exe" to "wolfMP_<version>.exe"
     $downloadedExecutablePath = Join-Path -Path $tempPath -ChildPath "wolfMP.exe"
