@@ -1,66 +1,52 @@
-# Define variables
-$repoOwner = "rtcwmp-com"
-$repoName = "rtcwPro"
-$releaseApiUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases/latest"
-$executableNamePrefix = "wolfMP"
-$tempFolder = "temp"
-$userArgument = $null
-
-# Function to check if a process is running
-function Test-ProcessRunning {
-    param (
-        [string]$processName
-    )
-
-    Get-Process -Name $processName -ErrorAction SilentlyContinue
-}
-
-# Function to terminate a process
-function Stop-ProcessByName {
-    param (
-        [string]$processName
-    )
-
-    $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-    if ($process) {
-        Write-Host "Terminating $processName process..."
-        Stop-Process -Name $processName -Force
-    }
-}
-
-# Function to get user input with a 5-second timeout
-function Get-UserInputWithTimer {
-    param (
-        [string]$prompt,
-        [int]$timeoutSeconds
-    )
-
-    $timeout = (Get-Date).AddSeconds($timeoutSeconds)
-    $input = $null
-
-    while ((Get-Date) -le $timeout) {
-        $input = Read-Host $prompt
-        if ($input -ne "") {
-            break
-        }
-    }
-
-    return $input
-}
-
-# Ask user for additional argument with a 5-second timeout
-$userArgument = Get-UserInputWithTimer -prompt "Enter additional argument (or press Enter to continue):" -timeoutSeconds 3
-
-# Default to "nl.rtcw.eu" if no input is provided
-if (-not $userArgument) {
-    $userArgument = "nl.rtcw.eu"
-    Write-Host "No input provided within 5 seconds. Defaulting to $userArgument."
-} else {
-    Write-Host "User provided input: $userArgument."
-}
-
-# Use the current working directory as the local folder
+# Localpath 
 $localFolder = Get-Location
+
+# Load configurations from wolfMP.config if available
+$configFilePath = Join-Path -Path $localFolder -ChildPath "wolfMP.config"
+if (Test-Path $configFilePath) {
+    Write-Host "Loading configurations from wolfMP.config..."
+    
+    # Read the content of the file
+    $configContent = Get-Content -Path $configFilePath -Raw | Out-String
+    
+    # Execute the content as PowerShell code
+    Invoke-Expression $configContent
+}
+
+# Default values
+if ($null -eq $repoOwner) { $repoOwner = "rtcwmp-com" }
+if ($null -eq $repoName) { $repoName = "rtcwPro" }
+if ($null -eq $releaseApiUrl) { $releaseApiUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" }
+if ($null -eq $gitHubPk3Url) { $gitHubPk3Url = "https://raw.githubusercontent.com/Oksii/autoexec_timer/main/README.md" }
+if ($null -eq $pk3DownloadUrlBase) { $pk3DownloadUrlBase = "http://rtcw.life/files/mapdb/" }
+if ($null -eq $executableNamePrefix) { $executableNamePrefix = "wolfMP" }
+
+# OBS 
+if ($null -eq $obsPath) { $obsPath = "C:\Program Files\obs-studio\bin\64bit\obs64.exe" }
+if ($null -eq $obsWorkingDirectory) { $obsWorkingDirectory = "C:\Program Files\obs-studio\bin\64bit\" }
+if ($null -eq $obsArgs) { $obsArgs = '--profile "shadowplay" --minimize-to-tray --startreplaybuffer --disable-shutdown-check' }
+if ($null -eq $processCheckDuration) { $processCheckDuration = 5 }
+
+# backups 
+if ($null -eq $backupDateFormat) { $backupDateFormat = "yyyy-MM-dd" }
+if ($null -eq $backupDate) { $backupDate = Get-Date -Format $backupDateFormat }
+
+# Directories
+if ($null -eq $tempFolder) { $tempFolder = "temp" }
+if ($null -eq $mainSubPath) { $mainSubPath = "Main" }
+if ($null -eq $rtcwproSubPath) { $rtcwproSubPath = "rtcwpro" }
+
+# User Input
+if (-not $userInputDefault) {
+    # Default user input if none provided
+    $userInput = Read-Host -Prompt "Enter the server details"
+} else {
+    # Use the provided default value
+    $userInput = $userInputDefault
+}
+
+# rtcw 
+if (-not $rtcwArgs) { $rtcwArgs = "+set fs_game rtcwpro +exec autoexec.cfg +connect $userInput" }
 
 # Fetch the release information
 $releaseInfo = Invoke-RestMethod -Uri $releaseApiUrl
@@ -71,8 +57,15 @@ $asset = $releaseInfo.assets | Where-Object { $_.name -match 'rtcwpro_(\d+)_clie
 if ($asset) {
     $assetVersion = $matches[1]
 
-    # Construct the local executable path
+    # Construct paths
     $localExecutablePath = Join-Path -Path $localFolder -ChildPath "$executableNamePrefix_$assetVersion.exe"
+    $rtcwproFullPath = Join-Path -Path $localFolder -ChildPath $rtcwproSubPath
+    $mainFullPath = Join-Path -Path $localFolder -ChildPath $mainSubPath
+    $rtcwproBackupFileName = "backup_${assetVersion}_${backupDate}.cfg"
+    $mainBackupFileName = "backup_${assetVersion}_${backupDate}.cfg"
+    $rtcwproBackupPath = Join-Path -Path $rtcwproFullPath -ChildPath $rtcwproBackupFileName
+    $mainBackupPath = Join-Path -Path $mainFullPath -ChildPath $mainBackupFileName
+    $tempPath = Join-Path -Path $localFolder -ChildPath $tempFolder
 
     # Check if local version matches
     $localVersions = Get-ChildItem -Path $localFolder -Filter "wolfMP_*.exe" | ForEach-Object {
@@ -81,58 +74,87 @@ if ($asset) {
 
     if ($localVersions -contains $assetVersion) {
         Write-Host "Local version is up to date. Launching wolfMP_$assetVersion.exe"
-        Start-Process "$localFolder\wolfMP_$assetVersion.exe" -ArgumentList "+set fs_game rtcwpro +exec autoexec.cfg +connect $userArgument" -NoNewWindow
-
-        # Start OBS process
-        Start-Process -FilePath "C:\Program Files\obs-studio\bin\64bit\obs64.exe" -WorkingDirectory "C:\Program Files\obs-studio\bin\64bit\" -ArgumentList '--profile "shadowplay" --minimize-to-tray --startreplaybuffer --disable-shutdown-check'
-
-        # Main loop
-        while ($true) {
-            # Check if wolfMP process is running
-            $wolfMPProcess = Test-ProcessRunning -processName "wolfMP_$assetVersion"
-
-            if ($wolfMPProcess) {
-                Write-Host "wolfMP_$assetVersion.exe process is running."
-            } else {
-                Write-Host "wolfMP_$assetVersion.exe process not found. Terminating obs64.exe."
-
-                # Terminate obs64.exe
-                Stop-Process -Name "obs64"
-
-                # Exit the loop if obs64.exe is not running
-                if (-not (Test-ProcessRunning -processName "obs64.exe")) {
-                    Write-Host "obs64.exe process not found. Exiting script."
-                    break
-                }
+    
+        # Start wolfMP process
+        $rtcwProcess = Start-Process "$localFolder\wolfMP_$assetVersion.exe" -ArgumentList $rtcwArgs -PassThru
+        $obsProcess = Start-Process -FilePath $obsPath -WorkingDirectory $obsWorkingDirectory -ArgumentList $obsArgs -PassThru
+    
+            # Monitor wolfMP process
+            while (Get-Process -Name "wolfMP_*" -ErrorAction SilentlyContinue) {
+                Write-Host "wolfMP process still running..."
+                Start-Sleep -Seconds $processCheckDuration
             }
-
-            # Sleep for a short interval before checking again
-            Start-Sleep -Seconds 10
-        }
+            
+            # If wolfMP process stopped, stop OBS process
+            Write-Host "wolfMP process has exited."
+            Stop-Process -Name "obs64" -ErrorAction SilentlyContinue
 
         exit
-
     }
 
-    # Create the temp folder
-    $tempPath = Join-Path -Path $localFolder -ChildPath $tempFolder
+    # Backup configuration files
+    Copy-Item -Path "$rtcwproFullPath\wolfconfig_mp.cfg" -Destination "$rtcwproBackupPath" -Force
+    Copy-Item -Path "$mainFullPath\wolfconfig_mp.cfg" -Destination "$mainBackupPath" -Force
+
+    # Create temp folder
     New-Item -ItemType Directory -Path $tempPath -Force | Out-Null
 
     # Download the asset
     $downloadUrl = $asset.browser_download_url
-    Write-Host "Downloading $asset.name..."
+    Write-Host "Downloading $($asset.name)..."
     Invoke-WebRequest -Uri $downloadUrl -OutFile (Join-Path -Path $tempPath -ChildPath $asset.name)
 
-    # Extract the contents of the downloaded archive
+    # Extract contents of the downloaded archive
     Expand-Archive -Path (Join-Path -Path $tempPath -ChildPath $asset.name) -DestinationPath $tempPath -Force
 
-    # Delete rtcwpro_*.pk3 files if updating wolfMP_<version>.exe
-    $rtcwproPath = Join-Path -Path $localFolder -ChildPath "rtcwpro"
-    if (Test-Path $rtcwproPath -PathType Container) {
-        Write-Host "Deleting rtcwpro_*.pk3 files from $rtcwproPath..."
-        Get-ChildItem -Path $rtcwproPath -Filter "rtcwpro_*.pk3" | Remove-Item -Force
+    # Use Get-GitHubPk3ListFromReadme only when updating the asset
+    function Get-GitHubPk3ListFromReadme {
+        param (
+            [string]$ReadmeUrl
+        )
+
+        try {
+            $readmeContent = Invoke-RestMethod -Uri $ReadmeUrl -TimeoutSec 5
+        } catch {
+            Write-Host "Error: Unable to connect to the GitHub README. Make sure you have an internet connection."
+            return @()  # Return an empty array to indicate no files were retrieved
+        }
+
+        $supportedMapsIndex = $readmeContent.IndexOf("### Supported custom maps")
+        if ($supportedMapsIndex -ge 0) {
+            $pk3Section = $readmeContent.Substring($supportedMapsIndex)
+            $pk3Files = $pk3Section -split "`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" -and $_ -match '\.pk3$' }
+            return $pk3Files
+        } else {
+            Write-Host "Error: Unable to find the '### Supported custom maps' section in the Readme."
+            return @()
+        }
     }
 
+    # Download and parse list of .pk3 files from GitHub README.md
+    $gitHubPk3List = Get-GitHubPk3ListFromReadme -ReadmeUrl $gitHubPk3Url
+
+    # Compare with .pk3 files in the Main directory
+    $mainPk3Path = Join-Path -Path $localFolder -ChildPath $mainSubPath
+    $missingPk3Files = $gitHubPk3List | Where-Object { -not (Test-Path (Join-Path -Path $mainPk3Path -ChildPath $_)) }
+
+    # Download missing .pk3 files and move them to the Main directory
+    if ($missingPk3Files.Count -gt 0) {
+        Write-Host "Downloading and moving missing .pk3 files to Main directory..."
+        foreach ($missingPk3File in $missingPk3Files) {
+            $pk3DownloadUrl = "$pk3DownloadUrlBase$missingPk3File"
+            $pk3DownloadPath = Join-Path -Path $mainPk3Path -ChildPath $missingPk3File
+
+            try {
+                Invoke-WebRequest -Uri $pk3DownloadUrl -OutFile $pk3DownloadPath -ErrorAction Stop
+                Write-Host ("Downloaded: {0}" -f $missingPk3File)
+            } catch {
+                $errorMessage = $_.Exception.Message
+                Write-Host ("Error downloading {0}: {1}" -f $pk3DownloadUrl, $errorMessage -replace ':', '_')
+            }
+        }
+    }
+	
     # Rename "wolfMP.exe" to "wolfMP_<version>.exe"
     $downloadedExecutablePath = Join-Path -Path $tempPath -ChildPath "wolfMP.exe"
     if (Test-Path $downloadedExecutablePath -PathType Leaf) {
@@ -157,37 +179,21 @@ if ($asset) {
         }
     }
 
-    # Launch the newly downloaded executable
+    # Start newly downloaded process and monitor
     $launchedExecutablePath = Join-Path -Path $localFolder -ChildPath $newExecutableName
-    Write-Host "Launching $launchedExecutablePath"
-    Start-Process $launchedExecutablePath -ArgumentList "+set fs_game rtcwpro +exec autoexec.cfg +connect $userArgument" -NoNewWindow
+    $rtcwProcess = Start-Process $launchedExecutablePath -ArgumentList $rtcwArgs -PassThru
+    $obsProcess = Start-Process -FilePath $obsPath -WorkingDirectory $obsWorkingDirectory -ArgumentList $obsArgs -PassThru
 
-    # Start OBS process
-    Start-Process -FilePath "C:\Program Files\obs-studio\bin\64bit\obs64.exe" -WorkingDirectory "C:\Program Files\obs-studio\bin\64bit\" -ArgumentList '--profile "shadowplay" --minimize-to-tray --startreplaybuffer --disable-shutdown-check'
-
-    # Main loop
-    while ($true) {
-        # Check if wolfMP process is running
-        $wolfMPProcess = Test-ProcessRunning -processName "wolfMP_$assetVersion"
-
-        if ($wolfMPProcess) {
-            Write-Host "wolfMP_$assetVersion.exe process is running."
-        } else {
-            Write-Host "wolfMP_$assetVersion.exe process not found. Terminating obs64.exe."
-
-            # Terminate obs64.exe
-            Stop-Process -Name "obs64"
-
-            # Exit the loop if obs64.exe is not running
-            if (-not (Test-ProcessRunning -processName "obs64.exe")) {
-                Write-Host "obs64.exe process not found. Exiting script."
-                break
-            }
-        }
-
-        # Sleep for a short interval before checking again
-        Start-Sleep -Seconds 10
+    # Monitor wolfMP process
+    while (Get-Process -Name "wolfMP_*" -ErrorAction SilentlyContinue) {
+        Write-Host "wolfMP process still running..."
+        Start-Sleep -Seconds $processCheckDuration
     }
+    
+    # If wolfMP process stopped, stop OBS process
+    Write-Host "wolfMP process has exited."
+    Stop-Process -Name "obs64" -ErrorAction SilentlyContinue
+
 } else {
     Write-Host "Error: No matching asset found."
 }
