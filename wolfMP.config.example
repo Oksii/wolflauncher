@@ -1,0 +1,31 @@
+# wolfMP.config
+
+# GitHub Repository Configuration
+$repoOwner = "rtcwmp-com"
+$repoName = "rtcwPro"
+$releaseApiUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases/latest"
+$gitHubPk3Url = "https://raw.githubusercontent.com/Oksii/autoexec_timer/main/README.md"
+$pk3DownloadUrlBase = "http://rtcw.life/files/mapdb/"
+$executableNamePrefix = "wolfMP"
+
+# OBS Configuration
+$obsPath = "C:\Program Files\obs-studio\bin\64bit\obs64.exe"
+$obsWorkingDirectory = "C:\Program Files\obs-studio\bin\64bit\"
+$obsArgs = '--profile "shadowplay" --minimize-to-tray --startreplaybuffer --disable-shutdown-check'
+$processCheckDuration = 30
+
+# Backup Configuration
+$backupDateFormat = "yyyy-MM-dd"
+
+# Directory Configuration
+$tempFolder = "temp"
+$mainSubPath = "Main"
+$rtcwproSubPath = "rtcwpro"
+
+# User Input Configuration
+# Uncomment the following line if you want to specify a default value
+# $userInputDefault = "nl.rtcw.eu"
+
+# rtcw Configuration
+# Uncomment the following line if you want to specify a default value
+# $rtcwArgs = "+set fs_game rtcwpro +exec autoexec.cfg +connect nl.rtcw.eu"
