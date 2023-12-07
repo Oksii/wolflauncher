@@ -24,7 +24,9 @@ We further clean-up the client from old rtcwpro_*.pk3 assets to force a fresh do
 
 Additionally try to create a backup of our wolfconfig_mp.cfg files in their respective folders as some users complain about config issues after an update. This should hopefully help them preserve settings. 
 
-We assume that most people using this are players that haven't played in a long time or are fresh installs, as updates to the client.exe are very very infrequent, therefor it's worth checking if they're missing any of the actively played maps and download them if necessary. 
+We assume that most people using this are players that haven't played in a long time or are fresh installs, as updates to the client.exe are very infrequent.
+
+Therefor it's worth checking if they're missing any of the actively played maps and download them if necessary. 
 
 We're doing so by comparing the filenames of the *.pk3 files in their Main/ directory against this [list of actively played custom maps](https://github.com/Oksii/autoexec_timer#supported-custom-maps).
 
