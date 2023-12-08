@@ -16,7 +16,8 @@ ps2exe -iconFile 'wolfMP.ico' -description 'RtCWPro Launcher' -product 'RtCWPro'
 ## [wolfMP.ps1](main/wolfMP.ps1)
 
 - Extract the version from filename and compare it against the latest version of the filename provided in the github release api for RtCWPro.
-- A succesful match launches the game and exits.
+- A successful match launches the game and exits.
+
 
 ### Otherwise:
 - Download rtcwpro_"version"_client.zip, extract it to a temp folder and name the .exe appropriately to reflect the version tag in the filename.
@@ -26,14 +27,14 @@ ps2exe -iconFile 'wolfMP.ico' -description 'RtCWPro Launcher' -product 'RtCWPro'
 - Download any missing maps from the community repository at: http://rtcw.life/files/mapdb/ 
 
 ## Additional Configuration: 
-You can delcare additional settings or deviate from the default variables by providing a [wolfMP.config](main/wolfMP.config.example) file. 
+You can declare additional settings or deviate from the default variables by providing a [wolfMP.config](main/wolfMP.config.example) file. 
 Available parameters: 
 | Parameter | Default | Function | 
 | :----: | --- | --- |
 | $RepoOwner | rtcwmp-com | $RepoOwner used in github string
 | $RepoName | rtcwPro | $RepoName used in github string
 | $ReleaseApiUrl | https://api.github.com/repos/$RepoOwner/$RepoName/releases/latest | Default release API 
-| GitHubPk3Url | https://raw.githubusercontent.com/Oksii/autoexec_timer/main/README.md | List of Costum Maps to download
+| $GitHubPk3Url | https://raw.githubusercontent.com/Oksii/autoexec_timer/main/README.md | List of Costum Maps to download
 | $Pk3DownloadUrlBase | http://rtcw.life/files/mapdb/ | Map repository 
 | $RtcwArgs | +set fs_game rtcwpro | Append launch arguments to wolfMP.exe, ie: +exec autoexec.cfg +connect serverIP:password
 | $BackupDateFormat | yyyy-MM-dd | Date Format used in backup.cfg files
@@ -47,4 +48,4 @@ Available parameters:
 
 ### Known Issues and workarounds
 - Some AMD graphic cards may incorrectly draw textures on long distance, this seems to be caused by renaming the wolfMP.exe. Possibly related to code in ui_main in the game. Setting "r_depthbits 32" fixes this issue. 
-- OBS Game Capture specifically set to woflMP.exe and "Window title must match" or "Match title, otherwise find window of same executable"  may fail to capture the window. Set Window Match Priority to: "Match title, otherwise find window **of same type**". Or Update Window to "wolfMP_130.exe" though the latter will requiring update whenever a new wolfMP.exe is released. 
+- OBS Game Capture specifically set to woflMP.exe and "Window title must match" or "Match title, otherwise find window of same executable"  may fail to capture the window. Set Window Match Priority to: "Match title, otherwise find window **of same type**". Or Update Window to "wolfMP_130.exe" though the latter will require updating whenever a new wolfMP.exe is released. 
