@@ -47,3 +47,4 @@ Available parameters:
 
 ### Known Issues and workarounds
 - Some AMD graphic cards may incorrectly draw textures on long distance, this seems to be caused by renaming the wolfMP.exe. Possibly related to code in ui_main in the game. Setting "r_depthbits 32" fixes this issue. 
+- Game Capture specifically set to woflMP.exe to OBS may fail to capture the window. Update process name in capture settings or use scripts such as: [OBS-Dynamic-Capture](https://github.com/JonathanThorpe/obs-dynamic-window-capture) to specify wildcards in title name. wolfMP*.exe should work (*untested*)
