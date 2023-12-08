@@ -19,18 +19,15 @@
 #$MainSubPath=Main
 
 ### Additional process
-## Example RInput
+#$AdditionalProcess="" # Name of the process.exe
+#$AdditionalProcessPath="" # Path to the Folder it resides in
+#$AdditionalProcessArgs="" # RInput expects a process name to hook into. "RInput.exe wolfMP_130.exe" 
+#$AdditionalProcessDelay=3 # Delay in seconds to start after RTCW Launched 
 
-# Name of our exe
+### Example RInput
 #$AdditionalProcess="RInput.exe" 
-
-# Path to the Folder it resides in
-#$AdditionalProcessPath="D:\Games\RtCW\" 
-
-# RInput expects a process name to hook into. Equal to "RInput.exe wolfMP_130.exe" 
+#$AdditionalProcessPath="D:\Games\RTCW\" 
 #$AdditionalProcessArgs="wolfMP_130.exe" 
-
-# Delay in seconds to start after RTCW Launched 
 #$AdditionalProcessDelay=3 
 
 ### Example OBS 
