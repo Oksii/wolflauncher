@@ -118,19 +118,13 @@ if ($asset) {
     # Extract contents of the downloaded archive
     Expand-Archive -Path (Join-Path -Path $tempPath -ChildPath $asset.name) -DestinationPath $tempPath -Force
 
-    # Use Get-GitHubPk3ListFromReadme only when updating the asset
     function Get-GitHubPk3ListFromReadme {
         param (
             [string]$ReadmeUrl
         )
-
-        try {
-            $readmeContent = Invoke-RestMethod -Uri $ReadmeUrl -TimeoutSec 5
-        } catch {
-            Write-Host "Error: Unable to connect to the GitHub README. Make sure you have an internet connection."
-            return @()  # Return an empty array to indicate no files were retrieved
-        }
-
+    
+        $readmeContent = Invoke-RestMethod -Uri $ReadmeUrl
+    
         $supportedMapsIndex = $readmeContent.IndexOf("### Supported custom maps")
         if ($supportedMapsIndex -ge 0) {
             $pk3Section = $readmeContent.Substring($supportedMapsIndex)
