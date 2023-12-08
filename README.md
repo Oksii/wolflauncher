@@ -39,3 +39,7 @@ Available parameters:
 | $AdditionalProcessPath | null | *Disabled by Default:* Path used for the above, full folder Path needed 
 | $AdditionalProcessArgs | null | *Disabled by Default:* Argument for the Process to use. Example RInput we need to tell it what wolfMP_"version".exe to attach to 
 | $AdditionalProcessDelay | null | *Disabled by Default:* Delay in seconds before starting our additional Process
+
+
+### Known Issues and workarounds
+- Some AMD graphic cards may incorrectly draw textures on long distance, this seems to be caused by renaming the wolfMP.exe. Possibly related to code in ui_main in the game. Setting "r_depthbits 32" fixes this issue. 
