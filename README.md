@@ -1,7 +1,8 @@
-# RTCWPro Launcher 
   - [RtCWpro](https://github.com/rtcwmp-com/rtcwPro) - RTCWPro Github
   - [RTCW Match Server](https://github.com/msh100/rtcw) - RTCWPro Docker Server
 
+
+# RTCWPro Launcher 
 Simple powershell script to update and launch our game client. 
 
 Needs to be placed in the root directory of the game, ie: C:\Program Files\Return To Castle Wolfenstein\ 
