@@ -1,4 +1,5 @@
 ### Example wolfMP.config with Default Values
+### Uncomment lines to enable
 
 ### GitHub and map repository
 #$RepoOwner=rtcwmp-com
@@ -18,8 +19,21 @@
 #$MainSubPath=Main
 
 ### Additional process
-#$AdditionalProcess="RInput.exe"
-#$AdditionalProcessPath="D:\Games\RtCW\"
-#$AdditionalProcessArgs="wolfMP_130.exe"
-### Delay in seconds to start after RtCW Launched 
+## Example RInput
+
+# Name of our exe
+#$AdditionalProcess="RInput.exe" 
+
+# Path to the Folder it resides in
+#$AdditionalProcessPath="D:\Games\RtCW\" 
+
+# RInput expects a process name to hook into. Equal to "RInput.exe wolfMP_130.exe" 
+#$AdditionalProcessArgs="wolfMP_130.exe" 
+
+# Delay in seconds to start after RTCW Launched 
 #$AdditionalProcessDelay=3 
+
+### Example OBS 
+#$AdditionalProcess="obs64.exe"
+#$AdditionalProcessPath="C:\Program Files\obs-studio\bin\64bit\"
+#$AdditionalProcessArgs="--minimize-to-tray --startreplaybuffer"
