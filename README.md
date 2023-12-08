@@ -1,12 +1,13 @@
-  - [RtCWpro](https://github.com/rtcwmp-com/rtcwPro) - RTCWPro Github
-  - [RTCW Match Server](https://github.com/msh100/rtcw) - RTCWPro Docker Server
-
-
 # RTCWPro Launcher 
 Simple powershell script to update and launch our game client. 
 
 Needs to be placed in the root directory of the game, ie: C:\Program Files\Return To Castle Wolfenstein\ 
 
+### Useful Links
+  - [RtCWpro](https://github.com/rtcwmp-com/rtcwPro) - RTCWPro Github
+  - [RTCW Match Server](https://github.com/msh100/rtcw) - RTCWPro Docker Server
+
+### Compile Method
 For current gather and public use we compile [wolfMP_maps_backup.ps1](wolfMP_maps_backup.ps1) via [ps2exe](https://github.com/MScholtes/PS2EXE) using the arguments: 
 ```
 ps2exe -iconFile 'wolfMP.ico' -description 'RtCWPro Launcher' -product 'RtCWPro' -copyright 'WolfMP.com' -version '1.3' -noOutput -noConsole -requireAdmin -title 'RtCWPro Launcher' -company 'WolfMP.com' -trademark 'WolfMP.com' .\wolfMP.ps1 .\wolfMP.exe
