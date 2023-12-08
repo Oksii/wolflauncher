@@ -1,4 +1,6 @@
-# RtCWPro Launcher 
+# RTCWPro Launcher 
+  - [RtCWpro](https://github.com/rtcwmp-com/rtcwPro) - RTCWPro Github
+  - [RTCW Match Server](https://github.com/msh100/rtcw) - RTCWPro Docker Server
 
 Simple powershell script to update and launch our game client. 
 
