@@ -1,0 +1,25 @@
+### Example wolfMP.config with Default Values
+
+### GitHub and map repository
+#$RepoOwner=rtcwmp-com
+#$RepoName=rtcwPro
+#$ReleaseApiUrl=https://api.github.com/repos/rtcwmp-com/rtcwPro/releases/latest
+#$GitHubPk3Url=https://raw.githubusercontent.com/Oksii/autoexec_timer/main/README.md
+#$Pk3DownloadUrlBase=http://rtcw.life/files/mapdb/
+
+### Additional command-line arguments for rtcw executable
+#$RtcwArgs=+set fs_game rtcwpro +exec autoexec.cfg +connect nl.rtcw.eu 
+
+### Format for the backup date
+#$BackupDateFormat=yyyy-MM-dd
+
+### Subdirectories
+#$RtcwproSubPath=rtcwpro
+#$MainSubPath=Main
+
+### Additional process
+#$AdditionalProcess="RInput.exe"
+#$AdditionalProcessPath="D:\Games\RtCW\"
+#$AdditionalProcessArgs="wolfMP_130.exe"
+### Delay in seconds to start after RtCW Launched 
+#$AdditionalProcessDelay=3 
