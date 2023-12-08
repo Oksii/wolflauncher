@@ -21,7 +21,7 @@ ps2exe -iconFile 'wolfMP.ico' -description 'RtCWPro Launcher' -product 'RtCWPro'
 ### Otherwise:
 - Download rtcwpro_"version"_client.zip, extract it to a temp folder and name the .exe appropriately to reflect the version tag in the filename.
 - Clean-up the client from old rtcwpro_*.pk3 assets to force a fresh download from the server as old/mismatching assets can frequently cause issues.
-- Ccreate a backup of our wolfconfig_mp.cfg files in their respective folders. This should help preserve settings for users with config issues. 
+- Create a backup of our wolfconfig_mp.cfg files in their respective folders. This should help preserve settings for users with config issues. 
 - Compare list of *.pk3's in Main/ against [list of actively played custom maps](https://github.com/Oksii/autoexec_timer#supported-custom-maps).
 - Download any missing maps from the community repository at: http://rtcw.life/files/mapdb/ 
 
