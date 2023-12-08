@@ -1,22 +1,63 @@
-# Define variables
-$repoOwner = "rtcwmp-com"
-$repoName = "rtcwPro"
-$releaseApiUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases/latest"
-$executableNamePrefix = "wolfMP"
-$tempFolder = "temp"
-
-# Define directories
-$rtcwproSubPath = "rtcwpro"
-$mainSubPath = "Main"
+# Localpath 
 $localFolder = Get-Location
 
-# Define format for the backup date
-$backupDateFormat = "yyyy-MM-dd"
-$backupDate = Get-Date -Format $backupDateFormat
+# Load configurations from wolfMP.config if available
+$configFilePath = Join-Path -Path $localFolder -ChildPath "wolfMP.config"
+if (Test-Path $configFilePath) {
+    Write-Host "Loading configurations from wolfMP.config..."
+    
+    # Read the content of the file
+    $configContent = Get-Content -Path $configFilePath -Raw | Out-String
+    
+    # Execute the content as PowerShell code
+    Invoke-Expression $configContent
+}
 
-# Define URLs
-$gitHubPk3Url = "https://raw.githubusercontent.com/Oksii/autoexec_timer/main/README.md"
-$pk3DownloadUrlBase = "http://rtcw.life/files/mapdb/"
+# Default values
+if ($null -eq $repoOwner) { $repoOwner = "rtcwmp-com" }
+if ($null -eq $repoName) { $repoName = "rtcwPro" }
+if ($null -eq $releaseApiUrl) { $releaseApiUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases/latest" }
+if ($null -eq $gitHubPk3Url) { $gitHubPk3Url = "https://raw.githubusercontent.com/Oksii/autoexec_timer/main/README.md" }
+if ($null -eq $pk3DownloadUrlBase) { $pk3DownloadUrlBase = "http://rtcw.life/files/mapdb/" }
+if ($null -eq $executableNamePrefix) { $executableNamePrefix = "wolfMP" }
+
+# backups 
+if ($null -eq $backupDateFormat) { $backupDateFormat = "yyyy-MM-dd" }
+if ($null -eq $backupDate) { $backupDate = Get-Date -Format $backupDateFormat }
+
+# Directories
+if ($null -eq $tempFolder) { $tempFolder = "temp" }
+if ($null -eq $mainSubPath) { $mainSubPath = "Main" }
+if ($null -eq $rtcwproSubPath) { $rtcwproSubPath = "rtcwpro" }
+
+# rtcw 
+if ($null -eq $rtcwArgs) { $rtcwArgs = "+set fs_game rtcwpro" }
+
+# Check if Additional Process is enabled in the config
+if ($null -ne $AdditionalProcess) {
+    $additionalProcessEnabled = $true
+
+    # Set Additional Process Path
+    $additionalProcessPath = $AdditionalProcessPath
+
+    # Set Additional Process Delay (use default if not provided)
+    $additionalProcessDelay = $AdditionalProcessDelay
+    if (-not $additionalProcessDelay) {
+        $additionalProcessDelay = 3
+    }
+
+    # Set Additional Process (with full path)
+    $additionalProcessExecutable = Join-Path -Path $additionalProcessPath -ChildPath $AdditionalProcess
+
+    Write-Host "Additional Process Path: $additionalProcessPath"
+    Write-Host "Additional Process: $additionalProcessExecutable"
+
+    # Set Additional Process Arguments (use default if not provided)
+    $additionalProcessArgs = $AdditionalProcessArgs
+    if (-not $additionalProcessArgs) {
+        $additionalProcessArgs = @()
+    }
+}
 
 # Fetch the release information
 $releaseInfo = Invoke-RestMethod -Uri $releaseApiUrl
@@ -44,7 +85,21 @@ if ($asset) {
 
     if ($localVersions -contains $assetVersion) {
         Write-Host "Local version is up to date. Launching wolfMP_$assetVersion.exe"
-        Start-Process "$localFolder\wolfMP_$assetVersion.exe" -ArgumentList "+set fs_game rtcwpro"
+        Start-Process "$localFolder\wolfMP_$assetVersion.exe" -ArgumentList $rtcwArgs
+        
+        # Additional Process (if enabled)
+        if ($additionalProcessEnabled) {
+            Write-Host "Launching Additional Process: $additionalProcessExecutable"
+            Start-Sleep -Seconds $additionalProcessDelay
+        
+            if ($additionalProcessArgs) {
+                Write-Host "Arguments for Additional Process: $additionalProcessArgs"
+                Start-Process -FilePath $additionalProcessExecutable -ArgumentList $additionalProcessArgs
+            } else {
+                Write-Host "Launching Additional Process without arguments."
+                Start-Process -FilePath $additionalProcessExecutable
+            }
+        }
         exit
     }
 
@@ -138,8 +193,21 @@ if ($asset) {
     # Launch the newly downloaded executable
     $launchedExecutablePath = Join-Path -Path $localFolder -ChildPath $newExecutableName
     Write-Host "Launching $launchedExecutablePath"
-    Start-Process $launchedExecutablePath -ArgumentList "+set fs_game rtcwpro"
-}
-else {
+    Start-Process $launchedExecutablePath -ArgumentList $rtcwArgs
+
+    # Additional Process (if enabled)
+    if ($additionalProcessEnabled) {
+        Write-Host "Launching Additional Process: $additionalProcessExecutable"
+        Start-Sleep -Seconds $additionalProcessDelay
+    
+        if ($additionalProcessArgs) {
+            Write-Host "Arguments for Additional Process: $additionalProcessArgs"
+            Start-Process -FilePath $additionalProcessExecutable -ArgumentList $additionalProcessArgs
+        } else {
+            Write-Host "Launching Additional Process without arguments."
+            Start-Process -FilePath $additionalProcessExecutable
+        }
+    }
+} else {
     Write-Host "Error: No matching asset found."
 }
