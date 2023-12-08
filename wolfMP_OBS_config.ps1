@@ -25,7 +25,7 @@ if ($null -eq $executableNamePrefix) { $executableNamePrefix = "wolfMP" }
 if ($null -eq $obsPath) { $obsPath = "C:\Program Files\obs-studio\bin\64bit\obs64.exe" }
 if ($null -eq $obsWorkingDirectory) { $obsWorkingDirectory = "C:\Program Files\obs-studio\bin\64bit\" }
 if ($null -eq $obsArgs) { $obsArgs = '--profile "shadowplay" --minimize-to-tray --startreplaybuffer --disable-shutdown-check' }
-if ($null -eq $processCheckDuration) { $processCheckDuration = 5 }
+if ($null -eq $processCheckDuration) { $processCheckDuration = 30 }
 
 # backups 
 if ($null -eq $backupDateFormat) { $backupDateFormat = "yyyy-MM-dd" }
