@@ -33,6 +33,7 @@ Available parameters:
 | :----: | --- | --- |
 | $RepoOwner | rtcwmp-com | $RepoOwner used in github string
 | $RepoName | rtcwPro | $RepoName used in github string
+| #$assetVersion | null | Manually force a version tag
 | $ReleaseApiUrl | https://api.github.com/repos/$RepoOwner/$RepoName/releases/latest | Default release API 
 | $GitHubPk3Url | https://raw.githubusercontent.com/Oksii/autoexec_timer/main/README.md | List of Costum Maps to download
 | $Pk3DownloadUrlBase | http://rtcw.life/files/mapdb/ | Map repository 
