@@ -36,17 +36,28 @@ if ($null -eq $tempFolder) { $tempFolder = "temp" }
 if ($null -eq $mainSubPath) { $mainSubPath = "Main" }
 if ($null -eq $rtcwproSubPath) { $rtcwproSubPath = "rtcwpro" }
 
-# User Input
-if (-not $userInputDefault) {
-    # Default user input if none provided
-    $userInput = Read-Host -Prompt "Enter the server details"
-} else {
-    # Use the provided default value
-    $userInput = $userInputDefault
-}
-
 # rtcw 
-if (-not $rtcwArgs) { $rtcwArgs = "+set fs_game rtcwpro +exec autoexec.cfg +connect $userInput" }
+if (-not $rtcwArgs) { $rtcwArgs = "+set fs_game rtcwpro +exec autoexec.cfg +connect" }
+
+# Check if Additional Process is enabled in the config
+if ($null -ne $AdditionalProcess) {
+    $additionalProcessEnabled = $true
+
+    # Set Additional Process Delay (use default if not provided)
+    $additionalProcessDelay = $AdditionalProcessDelay
+    if (-not $additionalProcessDelay) {
+        $additionalProcessDelay = 3
+    }
+
+    Write-Host "Additional Process Path: $additionalProcessPath"
+    Write-Host "Additional Process: $additionalProcessExecutable"
+
+    # Set Additional Process Arguments (use default if not provided)
+    $additionalProcessArgs = $AdditionalProcessArgs
+    if (-not $additionalProcessArgs) {
+        $additionalProcessArgs = @()
+    }
+}
 
 # Fetch the release information
 $releaseInfo = Invoke-RestMethod -Uri $releaseApiUrl
@@ -78,7 +89,21 @@ if ($asset) {
         # Start wolfMP process
         $rtcwProcess = Start-Process "$localFolder\wolfMP_$assetVersion.exe" -ArgumentList $rtcwArgs -PassThru
         $obsProcess = Start-Process -FilePath $obsPath -WorkingDirectory $obsWorkingDirectory -ArgumentList $obsArgs -PassThru
-    
+
+        # Additional Process (if enabled)
+        if ($AdditionalProcessEnabled) {
+            Write-Host "Launching Additional Process: $AdditionalProcess"
+            Start-Sleep -Seconds $additionalProcessDelay
+        
+            if ($AdditionalProcessArgs) {
+                Write-Host "Arguments for Additional Process: $AdditionalProcessArgs"
+                Start-Process -FilePath $AdditionalProcess -WorkingDirectory $AdditionalProcessPath -ArgumentList $AdditionalProcessArgs
+            } else {
+                Write-Host "Launching Additional Process without arguments."
+                Start-Process -FilePath $AdditionalProcess -WorkingDirectory $AdditionalProcessPath
+            }
+        }
+
             # Monitor wolfMP process
             while (Get-Process -Name "wolfMP_*" -ErrorAction SilentlyContinue) {
                 Write-Host "wolfMP process still running..."
@@ -88,7 +113,6 @@ if ($asset) {
             # If wolfMP process stopped, stop OBS process
             Write-Host "wolfMP process has exited."
             Stop-Process -Name "obs64" -ErrorAction SilentlyContinue
-
         exit
     }
 
@@ -107,19 +131,13 @@ if ($asset) {
     # Extract contents of the downloaded archive
     Expand-Archive -Path (Join-Path -Path $tempPath -ChildPath $asset.name) -DestinationPath $tempPath -Force
 
-    # Use Get-GitHubPk3ListFromReadme only when updating the asset
     function Get-GitHubPk3ListFromReadme {
         param (
             [string]$ReadmeUrl
         )
-
-        try {
-            $readmeContent = Invoke-RestMethod -Uri $ReadmeUrl -TimeoutSec 5
-        } catch {
-            Write-Host "Error: Unable to connect to the GitHub README. Make sure you have an internet connection."
-            return @()  # Return an empty array to indicate no files were retrieved
-        }
-
+    
+        $readmeContent = Invoke-RestMethod -Uri $ReadmeUrl
+    
         $supportedMapsIndex = $readmeContent.IndexOf("### Supported custom maps")
         if ($supportedMapsIndex -ge 0) {
             $pk3Section = $readmeContent.Substring($supportedMapsIndex)
@@ -183,6 +201,20 @@ if ($asset) {
     $launchedExecutablePath = Join-Path -Path $localFolder -ChildPath $newExecutableName
     $rtcwProcess = Start-Process $launchedExecutablePath -ArgumentList $rtcwArgs -PassThru
     $obsProcess = Start-Process -FilePath $obsPath -WorkingDirectory $obsWorkingDirectory -ArgumentList $obsArgs -PassThru
+
+    # Additional Process (if enabled)
+    if ($AdditionalProcessEnabled) {
+        Write-Host "Launching Additional Process: $AdditionalProcess"
+        Start-Sleep -Seconds $additionalProcessDelay
+    
+        if ($AdditionalProcessArgs) {
+            Write-Host "Arguments for Additional Process: $AdditionalProcessArgs"
+            Start-Process -FilePath $AdditionalProcess -WorkingDirectory $AdditionalProcessPath -ArgumentList $AdditionalProcessArgs
+        } else {
+            Write-Host "Launching Additional Process without arguments."
+            Start-Process -FilePath $AdditionalProcess -WorkingDirectory $AdditionalProcessPath
+        }
+    }
 
     # Monitor wolfMP process
     while (Get-Process -Name "wolfMP_*" -ErrorAction SilentlyContinue) {
