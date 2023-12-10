@@ -27,7 +27,7 @@
 ### Example RInput
 #$AdditionalProcess = "RInput.exe" 
 #$AdditionalProcessPath = "D:\Games\RTCW\" 
-#$AdditionalProcessArgs = "wolfMP_130.exe" 
+#$AdditionalProcessArgs = "wolfMP_131.exe" 
 #$AdditionalProcessDelay = 3 
 
 ### Example OBS 
