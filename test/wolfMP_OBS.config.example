@@ -35,8 +35,3 @@ $processCheckDuration = 30
 #$AdditionalProcessPath = "D:\Games\RtCWPro\" 
 #$AdditionalProcessArgs = "wolfMP_131.exe" 
 #$AdditionalProcessDelay = 3 
-
-### Example OBS 
-#$AdditionalProcess = "obs64.exe"
-#$AdditionalProcessPath = "C:\Program Files\obs-studio\bin\64bit\"
-#$AdditionalProcessArgs = "--minimize-to-tray --startreplaybuffer"
