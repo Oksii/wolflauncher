@@ -4,7 +4,6 @@
 ### GitHub and map repository
 #$RepoOwner = "rtcwmp-com"
 #$RepoName = "rtcwPro"
-#$assetVersion = "130"
 #$ReleaseApiUrl = "https://api.github.com/repos/rtcwmp-com/rtcwPro/releases/tags/1.3"
 #$GitHubPk3Url = "https://raw.githubusercontent.com/Oksii/autoexec_timer/main/README.md"
 #$Pk3DownloadUrlBase = "http://rtcw.life/files/mapdb/"
