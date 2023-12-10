@@ -88,16 +88,16 @@ if ($asset) {
         Start-Process "$localFolder\wolfMP_$assetVersion.exe" -ArgumentList $rtcwArgs
         
         # Additional Process (if enabled)
-        if ($additionalProcessEnabled) {
-            Write-Host "Launching Additional Process: $additionalProcessExecutable"
+        if ($AdditionalProcessEnabled) {
+            Write-Host "Launching Additional Process: $AdditionalProcess"
             Start-Sleep -Seconds $additionalProcessDelay
         
-            if ($additionalProcessArgs) {
-                Write-Host "Arguments for Additional Process: $additionalProcessArgs"
-                Start-Process -FilePath $additionalProcessExecutable -ArgumentList $additionalProcessArgs
+            if ($AdditionalProcessArgs) {
+                Write-Host "Arguments for Additional Process: $AdditionalProcessArgs"
+                Start-Process -FilePath $AdditionalProcess -WorkingDirectory $AdditionalProcessPath -ArgumentList $AdditionalProcessArgs
             } else {
                 Write-Host "Launching Additional Process without arguments."
-                Start-Process -FilePath $additionalProcessExecutable
+                Start-Process -FilePath $AdditionalProcess -WorkingDirectory $AdditionalProcessPath
             }
         }
         exit
@@ -190,16 +190,16 @@ if ($asset) {
     Start-Process $launchedExecutablePath -ArgumentList $rtcwArgs
 
     # Additional Process (if enabled)
-    if ($additionalProcessEnabled) {
-        Write-Host "Launching Additional Process: $additionalProcessExecutable"
+    if ($AdditionalProcessEnabled) {
+        Write-Host "Launching Additional Process: $AdditionalProcess"
         Start-Sleep -Seconds $additionalProcessDelay
     
-        if ($additionalProcessArgs) {
-            Write-Host "Arguments for Additional Process: $additionalProcessArgs"
-            Start-Process -FilePath $additionalProcessExecutable -ArgumentList $additionalProcessArgs
+        if ($AdditionalProcessArgs) {
+            Write-Host "Arguments for Additional Process: $AdditionalProcessArgs"
+            Start-Process -FilePath $AdditionalProcess -WorkingDirectory $AdditionalProcessPath -ArgumentList $AdditionalProcessArgs
         } else {
             Write-Host "Launching Additional Process without arguments."
-            Start-Process -FilePath $additionalProcessExecutable
+            Start-Process -FilePath $AdditionalProcess -WorkingDirectory $AdditionalProcessPath
         }
     }
 } else {
