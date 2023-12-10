@@ -37,17 +37,11 @@ if ($null -eq $rtcwArgs) { $rtcwArgs = "+set fs_game rtcwpro" }
 if ($null -ne $AdditionalProcess) {
     $additionalProcessEnabled = $true
 
-    # Set Additional Process Path
-    $additionalProcessPath = $AdditionalProcessPath
-
     # Set Additional Process Delay (use default if not provided)
     $additionalProcessDelay = $AdditionalProcessDelay
     if (-not $additionalProcessDelay) {
         $additionalProcessDelay = 3
     }
-
-    # Set Additional Process (with full path)
-    $additionalProcessExecutable = Join-Path -Path $additionalProcessPath -ChildPath $AdditionalProcess
 
     Write-Host "Additional Process Path: $additionalProcessPath"
     Write-Host "Additional Process: $additionalProcessExecutable"
